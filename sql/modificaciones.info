@@ -1,4 +1,0 @@
-# Agregué para que si quiere validar en la aplicacion una cuenta lo pueda realizar.
-
-GRANT SELECT ON banco.caja_ahorro to atm@'%';
-
