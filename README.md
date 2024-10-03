@@ -5,13 +5,6 @@
 
 En la aplicación inicial hay opciones para realizar Transferencias y Extracciones,  dichas opciones serán implementadas como parte del proyecto 3 - parte 2  (no están mencionadas en el enunciado del proyecto 3 - parte 1).
 
-## Preparación para comenzar con el proyecto
-
-Se deberá descargar en forma local el proyecto clonando el mismo desde la línea de comandos con:
-```bash
-git clone https://github.com/drg-dcic-uns/banco.git 
-```
-
 ## Requisitos del sistema
 
 ### 1. Java JDK instalado y configurado (JAVA_HOME y PATH)
