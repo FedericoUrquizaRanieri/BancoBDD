@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import banco.modelo.ModeloImpl;
 import banco.utils.Fechas;
+import banco.utils.Parsing;
 
 
 public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
@@ -73,102 +74,47 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	
 	
 	@Override
-	public Double obtenerSaldo() throws Exception
-	{
+	public Double obtenerSaldo() throws Exception{
 		logger.info("Se intenta obtener el saldo de cliente {}", 3);
 
-		if (this.tarjeta == null ) {
+		if (this.tarjeta == null) {
 			throw new Exception("El cliente no ingresó la tarjeta");
 		}
 
-		/** 
-		 * TODO Obtiene el saldo.
-		 *      Debe capturar la excepción SQLException y propagar una Exception más amigable.
-		 */
-
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.
-		 */
-		Double saldo = (double) 1001;		
-		return saldo;
-		// Fin datos estáticos de prueba.
-	}	
+		ResultSet rs = consulta("SELECT saldo FROM trans_cajas_ahorro AS tr JOIN tarjeta AS t ON t.nro_ca = tr.nro_ca WHERE t.nro_tarjeta="+this.tarjeta+" ORDER BY fecha DESC LIMIT 1");
+		if (rs.next()) {
+			return rs.getDouble("saldo");
+		} else {
+			throw new Exception("Error en la recoleccion del saldo");
+		}
+	}
 
 	@Override
 	public ArrayList<TransaccionCajaAhorroBean> cargarUltimosMovimientos() throws Exception {
 		return this.cargarUltimosMovimientos(ModeloATM.ULTIMOS_MOVIMIENTOS_CANTIDAD);
-	}	
+	}
 	
 	@Override
-	public ArrayList<TransaccionCajaAhorroBean> cargarUltimosMovimientos(int cantidad) throws Exception
-	{
-		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta",cantidad);			
+	public ArrayList<TransaccionCajaAhorroBean> cargarUltimosMovimientos(int cantidad) throws Exception{
+		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta",cantidad);
 
-		/**
-		 * TODO Deberá recuperar los ultimos movimientos del cliente, 
-		 * 		la cantidad de movimientos a recuperar está definida en el parámetro (int cantidad).
-		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
-		 */
-		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.
-		 * 
-		+------------+----------+---------------+---------+----------+---------+
-		| fecha      | hora     | tipo          | monto   | cod_caja | destino |
-		+------------+----------+---------------+---------+----------+---------+
-		| 2021-09-16 | 11:10:00 | transferencia | -700.00 |       18 |      32 |
-		| 2021-09-15 | 17:20:00 | extraccion    | -200.00 |        2 |    NULL |
-		| 2021-09-14 | 09:03:00 | deposito      | 1600.00 |        2 |    NULL |
-		| 2021-09-13 | 13:30:00 | debito        |  -50.00 |     NULL |    NULL |
-		| 2021-09-12 | 15:00:00 | transferencia | -400.00 |       41 |       7 |
-		+------------+----------+---------------+---------+----------+---------+
- 		 */
-		
-		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
-		TransaccionCajaAhorroBean fila1 = new TransaccionCajaAhorroBeanImpl();
-		fila1.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-16","11:10:00"));
-		fila1.setTransaccionTipo("transferencia");
-		fila1.setTransaccionMonto(-700.00);
-		fila1.setTransaccionCodigoCaja(18);
-		fila1.setCajaAhorroDestinoNumero(32);
-		lista.add(fila1);
+		ArrayList<TransaccionCajaAhorroBean> retorno = new ArrayList<TransaccionCajaAhorroBean>(cantidad);
+		ResultSet rs = consulta("SELECT DISTINCT fecha,hora,tipo,monto,cod_caja,destino FROM trans_cajas_ahorro AS t JOIN tarjeta AS tar ON tar.nro_ca = t.nro_ca ORDER BY fecha DESC LIMIT "+cantidad);
 
-		TransaccionCajaAhorroBean fila2 = new TransaccionCajaAhorroBeanImpl();
-		fila2.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-15","17:20:00"));
-		fila2.setTransaccionTipo("extraccion");
-		fila2.setTransaccionMonto(-200.00);
-		fila2.setTransaccionCodigoCaja(2);
-		fila2.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila2);
-		
-		TransaccionCajaAhorroBean fila3 = new TransaccionCajaAhorroBeanImpl();
-		fila3.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-14","09:03:00"));
-		fila3.setTransaccionTipo("deposito");
-		fila3.setTransaccionMonto(1600.00);
-		fila3.setTransaccionCodigoCaja(2);
-		fila3.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila3);		
-
-		TransaccionCajaAhorroBean fila4 = new TransaccionCajaAhorroBeanImpl();
-		fila4.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-13","13:30:00"));
-		fila4.setTransaccionTipo("debito");
-		fila4.setTransaccionMonto(-50.00);
-		fila4.setTransaccionCodigoCaja(0);
-		fila4.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila4);	
-		
-		TransaccionCajaAhorroBean fila5 = new TransaccionCajaAhorroBeanImpl();
-		fila5.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-12","15:00:00"));
-		fila5.setTransaccionTipo("transferencia");
-		fila5.setTransaccionMonto(-400.00);
-		fila5.setTransaccionCodigoCaja(41);
-		fila5.setCajaAhorroDestinoNumero(7);	
-		lista.add(fila5);
-		
-		return lista;
-		
-		// Fin datos estáticos de prueba.
-	}	
+		int aux = 0;
+		TransaccionCajaAhorroBean trans;
+		while (rs.next()){
+			trans = new TransaccionCajaAhorroBeanImpl();
+			trans.setTransaccionFechaHora(Fechas.convertirStringADate(rs.getString("fecha"),rs.getString("hora")));
+			trans.setTransaccionTipo(rs.getString("tipo"));
+			trans.setTransaccionMonto(Parsing.parseMonto(rs.getString("monto")));
+			trans.setTransaccionCodigoCaja(rs.getInt("cod_caja"));
+			trans.setCajaAhorroDestinoNumero(rs.getInt("destino"));
+			retorno.add(aux,trans);
+			aux++;
+		}
+		return retorno;
+	}
 	
 	@Override
 	public ArrayList<TransaccionCajaAhorroBean> cargarMovimientosPorPeriodo(Date desde, Date hasta)
@@ -190,73 +136,26 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		}	
 		if (hasta.after(fechaActual)) {
 			throw new Exception("El fin del período no puede ser posterior a la fecha actual");
-		}				
-		/**
-		 * TODO Deberá recuperar los ultimos movimientos del cliente que se han realizado entre las fechas indicadas.
-		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
-		 * 		Debe generar excepción sin las fechas son erroneas (ver descripción en interface)
-		 */
-		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.
-		 * 
-		+------------+----------+---------------+---------+----------+---------+
-		| fecha      | hora     | tipo          | monto   | cod_caja | destino |
-		+------------+----------+---------------+---------+----------+---------+
-		| 2021-09-16 | 11:10:00 | transferencia | -700.00 |       18 |      32 |
-		| 2021-09-15 | 17:20:00 | extraccion    | -200.00 |        2 |    NULL |
-		| 2021-09-14 | 09:03:00 | deposito      | 1600.00 |        2 |    NULL |
-		| 2021-09-13 | 13:30:00 | debito        |  -50.00 |     NULL |    NULL |
-		| 2021-09-12 | 15:00:00 | transferencia | -400.00 |       41 |       7 |
-		+------------+----------+---------------+---------+----------+---------+
- 		 */
-		
-		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
-		TransaccionCajaAhorroBean fila1 = new TransaccionCajaAhorroBeanImpl();
-		fila1.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-16","11:10:00"));
-		fila1.setTransaccionTipo("transferencia");
-		fila1.setTransaccionMonto(-700.00);
-		fila1.setTransaccionCodigoCaja(18);
-		fila1.setCajaAhorroDestinoNumero(32);
-		lista.add(fila1);
+		}
 
-		TransaccionCajaAhorroBean fila2 = new TransaccionCajaAhorroBeanImpl();
-		fila2.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-15","17:20:00"));
-		fila2.setTransaccionTipo("extraccion");
-		fila2.setTransaccionMonto(-200.00);
-		fila2.setTransaccionCodigoCaja(2);
-		fila2.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila2);
-		
-		TransaccionCajaAhorroBean fila3 = new TransaccionCajaAhorroBeanImpl();
-		fila3.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-14","09:03:00"));
-		fila3.setTransaccionTipo("deposito");
-		fila3.setTransaccionMonto(1600.00);
-		fila3.setTransaccionCodigoCaja(2);
-		fila3.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila3);		
+		ArrayList<TransaccionCajaAhorroBean> retorno = new ArrayList<TransaccionCajaAhorroBean>();
+		System.out.println(Fechas.convertirDateADateSQL(desde));
+		System.out.println(Fechas.convertirDateADateSQL(hasta));
+		ResultSet rs = consulta("SELECT DISTINCT fecha,hora,tipo,monto,cod_caja,destino FROM trans_cajas_ahorro AS t JOIN tarjeta AS tar ON tar.nro_ca = t.nro_ca WHERE fecha >= '"+Fechas.convertirDateADateSQL(desde)+"' AND fecha <= '"+Fechas.convertirDateADateSQL(hasta)+"' ORDER BY fecha DESC");
 
-		TransaccionCajaAhorroBean fila4 = new TransaccionCajaAhorroBeanImpl();
-		fila4.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-13","13:30:00"));
-		fila4.setTransaccionTipo("debito");
-		fila4.setTransaccionMonto(-50.00);
-		fila4.setTransaccionCodigoCaja(0);
-		fila4.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila4);	
-		
-		TransaccionCajaAhorroBean fila5 = new TransaccionCajaAhorroBeanImpl();
-		fila5.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-12","15:00:00"));
-		fila5.setTransaccionTipo("transferencia");
-		fila5.setTransaccionMonto(-400.00);
-		fila5.setTransaccionCodigoCaja(41);
-		fila5.setCajaAhorroDestinoNumero(7);	
-		lista.add(fila5);
-		
-		logger.debug("Retorna una lista con {} elementos", lista.size());
-		
-		return lista;
-		
-		// Fin datos estáticos de prueba.
+		int aux = 0;
+		TransaccionCajaAhorroBean trans;
+		while (rs.next()){
+			trans = new TransaccionCajaAhorroBeanImpl();
+			trans.setTransaccionFechaHora(Fechas.convertirStringADate(rs.getString("fecha"),rs.getString("hora")));
+			trans.setTransaccionTipo(rs.getString("tipo"));
+			trans.setTransaccionMonto(Parsing.parseMonto(rs.getString("monto")));
+			trans.setTransaccionCodigoCaja(rs.getInt("cod_caja"));
+			trans.setCajaAhorroDestinoNumero(rs.getInt("destino"));
+			retorno.add(aux,trans);
+			aux++;
+		}
+		return retorno;
 	}
 	
 	@Override
@@ -387,3 +286,5 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 
 	
 }
+
+
