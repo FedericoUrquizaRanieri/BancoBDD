@@ -55,6 +55,21 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		
 		logger.info("Se intenta autenticar la tarjeta {} con pin {}", tarjeta, pin);
 
+		if (tarjeta == null) {
+			throw new Exception("El cliente no ingresó la tarjeta");
+		}
+		ResultSet rs=consulta("SELECT nro_tarjeta,PIN FROM tarjeta WHERE nro_tarjeta="+tarjeta);
+		if (rs.next()) {
+			System.out.println(rs.getString("PIN"));
+			if (rs.getString("PIN").equals(pin)) {
+				this.tarjeta = tarjeta;
+				return true;
+			}
+			else
+				return false;
+		} else {
+			throw new Exception("Error en la validacion de tarjeta");
+		}
 		/** 
 		 * TODO Código que autentica que exista una tarjeta con ese pin (el pin guardado en la BD está en MD5)
 		 *      En caso exitoso deberá registrar la tarjeta en la propiedad tarjeta y retornar true.
@@ -67,8 +82,6 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		 */
 
 		// Se registra la tarjeta en el caso que el acceso sea exitoso
-		this.tarjeta = tarjeta;
-        return true;
 		// Fin datos estáticos de prueba.
 	}
 	
