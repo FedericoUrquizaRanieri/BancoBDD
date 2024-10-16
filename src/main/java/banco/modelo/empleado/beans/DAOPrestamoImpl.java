@@ -34,6 +34,13 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		logger.debug("legajo : {}", prestamo.getLegajo());
 		logger.debug("cliente : {}", prestamo.getNroCliente());
 		
+		java.sql.Statement statement = conexion.createStatement();
+		statement.executeQuery("INSERT INTO prestamo (nro_prestamo,fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,legajo,nro_cliente) VALUES (CONSULTAR,'FECHAACTUAL',prestamo.getCantidadMeses(),prestamo.getMonto(),prestamo.getTasaInteres(),prestamo.getInteres(),prestamo.getValorCuota(),prestamo.getLegajo(),prestamo.getNroCliente()");
+
+		for(int i = 1; i <= prestamo.getCantidadMeses(); i++){
+			statement.executeQuery("");
+		}
+		
 		/**   
 		 * TODO Crear un Prestamo segun el PrestamoBean prestamo. 
 		 *    
@@ -49,9 +56,25 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 
 	@Override
 	public PrestamoBean recuperarPrestamo(int nroPrestamo) throws Exception {
-		
+
 		logger.info("Recupera el prestamo nro {}.", nroPrestamo);
+
+		java.sql.Statement statement = conexion.createStatement();
+		ResultSet rs = statement.executeQuery("SELECT * FROM pago WHERE nro_prestamo = "+nroPrestamo);
+		PrestamoBean prestamo = null;
 		
+		prestamo = new PrestamoBeanImpl();
+		prestamo.setNroPrestamo(rs.getInt("nro_prestamo"));
+		prestamo.setFecha(Fechas.convertirStringADate(rs.getString("fecha")));
+		prestamo.setCantidadMeses(rs.getInt("cant_meses"));
+		prestamo.setMonto(rs.getInt("monto"));
+		prestamo.setTasaInteres(rs.getInt("tasa_interes"));
+		prestamo.setInteres(rs.getInt("interes"));
+		prestamo.setValorCuota(rs.getInt("valor_cuota"));
+		prestamo.setLegajo(rs.getInt("legajo"));
+		prestamo.setNroCliente(rs.getInt("nro_cliente"));
+
+	
 		/**
 		 * TODO Obtiene el prestamo según el id nroPrestamo
 		 * 
@@ -59,26 +82,7 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		 * @return Un prestamo que corresponde a ese id o null
 		 * @throws Exception si hubo algun problema de conexión
 		 */		
-
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 * Retorna un PretamoBean con información del prestamo nro 4
-		 */
-		PrestamoBean prestamo = null;
-			
-		prestamo = new PrestamoBeanImpl();
-		prestamo.setNroPrestamo(4);
-		prestamo.setFecha(Fechas.convertirStringADate("2021-04-05"));
-		prestamo.setCantidadMeses(6);
-		prestamo.setMonto(20000);
-		prestamo.setTasaInteres(24);
-		prestamo.setInteres(2400);
-		prestamo.setValorCuota(3733.33);
-		prestamo.setLegajo(2);
-		prestamo.setNroCliente(2);
-   	
 		return prestamo;
-		// Fin datos estáticos de prueba.
 	}
 
 }

@@ -231,6 +231,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			throw new Exception("Hubo un error al recuperar la información sobre la tarjeta del cliente.");
 		}
 
+		
 		/**
 		 * TODO Deberá extraer de la cuenta del cliente el monto especificado (ya fue validado) y
 		 * 		de obtener el saldo de la cuenta como resultado.

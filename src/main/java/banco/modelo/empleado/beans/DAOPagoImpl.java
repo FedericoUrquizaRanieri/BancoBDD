@@ -27,61 +27,28 @@ public class DAOPagoImpl implements DAOPago {
 	public ArrayList<PagoBean> recuperarPagos(int nroPrestamo) throws Exception {
 		logger.info("Inicia la recuperacion de los pagos del prestamo {}", nroPrestamo);
 		
+		java.sql.Statement statement = conexion.createStatement();
+		ResultSet rs = statement.executeQuery("SELECT * FROM pago WHERE nro_prestamo = "+nroPrestamo);
+
+		ArrayList<PagoBean> retorno = new ArrayList<PagoBean>();
+		PagoBean fila;
+
+		if(rs.next()){
+			fila = new PagoBeanImpl();
+			fila.setNroPrestamo(rs.getInt("nro_prestamo"));
+			fila.setNroPago(rs.getInt("nro_pago"));
+			fila.setFechaVencimiento(Fechas.convertirStringADate(rs.getString("fecha_venc")));
+			fila.setFechaPago(Fechas.convertirStringADate(rs.getString("fecha_pago")));
+			retorno.add(fila);
+		} else{
+			new Exception("ERROR en la recuperacion de pagos");
+		}
+		return retorno;
+
 		/** 
 		 * TODO Recupera todos los pagos del prestamo (pagos e impagos) del prestamo nroPrestamo
 		 * 	    Si ocurre algún error deberá propagar una excepción.
 		 */
-		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  : 
-		 * Retorna los pagos de un prestamo nro 4
-		 */
-		ArrayList<PagoBean> lista = new ArrayList<PagoBean>();
-		
-		PagoBean fila = new PagoBeanImpl();
-		fila.setNroPrestamo(4);
-		fila.setNroPago(1);
-		fila.setFechaVencimiento(Fechas.convertirStringADate("2021-05-05"));
-		fila.setFechaPago(Fechas.convertirStringADate("2021-05-10"));
-		lista.add(fila);
-		
-		fila = new PagoBeanImpl();
-		fila.setNroPrestamo(4);
-		fila.setNroPago(2);
-		fila.setFechaVencimiento(Fechas.convertirStringADate("2021-06-05"));
-		fila.setFechaPago(Fechas.convertirStringADate("2021-06-11"));
-		lista.add(fila);
-		
-		fila = new PagoBeanImpl();
-		fila.setNroPrestamo(4);
-		fila.setNroPago(3);
-		fila.setFechaVencimiento(Fechas.convertirStringADate("2021-07-05"));
-		fila.setFechaPago(Fechas.convertirStringADate("2021-07-15"));
-		lista.add(fila);
-		
-		fila = new PagoBeanImpl();
-		fila.setNroPrestamo(4);
-		fila.setNroPago(4);
-		fila.setFechaVencimiento(Fechas.convertirStringADate("2021-08-05"));
-		fila.setFechaPago(null);
-		lista.add(fila);
-
-		fila = new PagoBeanImpl();
-		fila.setNroPrestamo(4);
-		fila.setNroPago(5);
-		fila.setFechaVencimiento(Fechas.convertirStringADate("2021-09-05"));
-		fila.setFechaPago(null);
-		lista.add(fila);
-
-		fila = new PagoBeanImpl();
-		fila.setNroPrestamo(4);
-		fila.setNroPago(6);
-		fila.setFechaVencimiento(Fechas.convertirStringADate("2021-10-05"));
-		fila.setFechaPago(null);
-		lista.add(fila);
-		
-		return lista;
-		// Fin datos estáticos de prueba.
 	}
 
 	@Override
@@ -89,6 +56,12 @@ public class DAOPagoImpl implements DAOPago {
 
 		logger.info("Inicia el pago de las {} cuotas del prestamo {}", cuotasAPagar.size(), nroPrestamo);
 
+		java.sql.Statement statement = conexion.createStatement();
+
+		for(int i=0 ;i < cuotasAPagar.size(); i++){
+			statement.executeQuery("UPDATE pago SET fecha_pago = FECHADUDA WHERE nro_prestamo = "+nroPrestamo+" AND fecha_pago IS NULL AND nro_pago = "+cuotasAPagar.get(i));
+		}	
+	}
 		/**
 		 * TODO Registra los pagos de cuotas definidos en cuotasAPagar.
 		 * 
@@ -96,6 +69,4 @@ public class DAOPagoImpl implements DAOPago {
 		 * cuotasAPagar Debe verificar que las cuotas a pagar no estén pagas (fecha_pago = NULL)
 		 * @throws Exception Si hubo error en la conexión
 		 */		
-
-	}
 }

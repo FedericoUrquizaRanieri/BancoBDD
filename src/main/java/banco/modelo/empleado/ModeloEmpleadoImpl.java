@@ -39,31 +39,29 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 	
 
 	@Override
-	public boolean autenticarUsuarioAplicacion(String legajo, String password) throws Exception {
-		logger.info("Se intenta autenticar el legajo {} con password {}", legajo, password);
-		/** 
-		 * TODO Código que autentica que exista un legajo de empleado y que el password corresponda a ese legajo
-		 *      (el password guardado en la BD está en MD5) 
-		 *      En caso exitoso deberá registrar el legajo en la propiedad legajo y retornar true.
-		 *      Si la autenticación no es exitosa porque el legajo no es válido o el password es incorrecto
-		 *      deberá retornar falso y si hubo algún otro error deberá producir una excepción.
-		 */
-		Integer legajoInt = null;		
-		try {
-			legajoInt = Integer.valueOf(legajo.trim());
+    public boolean autenticarUsuarioAplicacion(String legajo, String password) throws Exception {
+        logger.info("Se intenta autenticar el legajo {} con password {}", legajo, password);
+
+        Integer legajoInt = null;
+        try {
+            legajoInt = Integer.valueOf(legajo.trim());
         }
         catch (Exception ex) {
-        	throw new Exception("Se esperaba que el legajo sea un valor entero.");
+            throw new Exception("Se esperaba que el legajo sea un valor entero.");
         }
 
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */
-		// Se registra el usuario logueado.
-		this.legajo = 1;
-		return true;
-		// Fin datos estáticos de prueba.
-	}
+        ResultSet rs=consulta("SELECT legajo,password FROM empleado WHERE legajo = "+legajoInt);
+        if (rs.next()) {
+            if (rs.getString("password").equals(password)) {
+				this.legajo = legajoInt;
+                return true;
+            }
+            else
+                return false;
+        } else {
+            throw new Exception("Error en la validacion de usuario");
+        }
+    }
 	
 	@Override
 	public EmpleadoBean obtenerEmpleadoLogueado() throws Exception {
@@ -78,8 +76,19 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 	}	
 	
 	@Override
+	//Hecho
 	public ArrayList<String> obtenerTiposDocumento() throws Exception {
 		logger.info("recupera los tipos de documentos.");
+
+		ArrayList<String> retorno = new ArrayList<>();
+		ResultSet rs=consulta("SELECT DISTINCT tipo_doc FROM empleado");
+
+		int aux = 0;
+		while (rs.next()) {
+			retorno.add(aux, rs.getString("tipo_doc"));
+		}
+
+		return retorno;
 		/** 
 		 * TODO Debe retornar una lista de strings con los tipos de documentos. 
 		 *      Deberia propagar una excepción si hay algún error en la consulta.
@@ -88,10 +97,6 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		/*
 		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
 		 */
-		ArrayList<String> tipos = new ArrayList<String>();
-		tipos.add("DNI");
-		return tipos;
-		// Fin datos estáticos de prueba.
 	}	
 
 	@Override
@@ -99,18 +104,25 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 
 		logger.info("Busca la tasa correspondiente a el monto {} con una cantidad de meses {}", monto, cantidadMeses);
 
+		double retorno = 0;
+		ResultSet rs=consulta("SELECT DISTINCT tasa FROM Tasa_Prestamo WHERE monto_inf = "+monto+" AND periodo = "+cantidadMeses);
+		//ResultSet rs2=consulta("SELECT DISTINCT tasa FROM Tasa_Plazo_Fijo WHERE monto_inf = "+monto+" AND periodo = "+cantidadMeses);
+
+		if (rs.next()) {
+			retorno = rs.getDouble("tasa");
+		}
+
+		//else if(rs2.next()){
+		//	retorno = rs2.getDouble("tasa");
+		//}
+
 		/** 
 		 * TODO Debe buscar la tasa correspondiente según el monto y la cantidadMeses. 
 		 *      Deberia propagar una excepción si hay algún error de conexión o 
 		 *      no encuentra el monto dentro del [monto_inf,monto_sup] y la cantidadMeses.
 		 */
 		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */
-		double tasa = 23.00;
-   		return tasa;
-     	// Fin datos estáticos de prueba.
+		return retorno;
 	}
 
 	@Override
@@ -131,29 +143,24 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		return dao.recuperarCliente(tipoDoc, nroDoc);
 	}
 
-
 	@Override
+	//Hecho
 	public ArrayList<Integer> obtenerCantidadMeses(double monto) throws Exception {
 		logger.info("recupera los períodos (cantidad de meses) según el monto {} para el prestamo.", monto);
 
-		/** 
-		 * TODO Debe buscar los períodos disponibles según el monto. 
-		 *      Deberia propagar una excepción si hay algún error de conexión o 
-		 *      no encuentra el monto dentro del [monto_inf,monto_sup].
-		 */
-		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */		
-		ArrayList<Integer> cantMeses = new ArrayList<Integer>();
-		cantMeses.add(9);
-		cantMeses.add(18);
-		cantMeses.add(27);
-		cantMeses.add(54);
-		cantMeses.add(108);
-		
-		return cantMeses;
-		// Fin datos estáticos de prueba.
+		ArrayList<Integer> retorno = new ArrayList<Integer>();
+		ResultSet rs=consulta("SELECT DISTINCT periodo FROM Tasa_Prestamo WHERE monto_inf <= "+monto+" AND monto_sup => "+monto);
+
+		int aux = 0;
+		while (rs.next()) {
+			retorno.add(aux, rs.getInt("periodo"));
+			aux++;
+		} 
+		if(retorno.isEmpty()){
+			throw new Exception("ERROR. No existen periodos segun el monto establecido.");
+		}
+
+		return retorno;
 	}
 
 	@Override	
@@ -161,17 +168,14 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 	{
 		logger.info("Verifica si el cliente {} tiene algun prestamo que tienen cuotas por pagar.", nroCliente);
 
-		/** 
-		 * TODO Busca algún prestamo del cliente que tenga cuotas sin pagar (vigente) retornando el nro_prestamo
-		 *      si no existe prestamo del cliente o todos están pagos retorna null.
-		 *      Si hay una excepción la propaga con un mensaje apropiado.
-		 */
-		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */
-		return 1;
-		// Fin datos estáticos de prueba.
+		int retorno = 0;
+		ResultSet rs=consulta("SELECT DISTINCT p.nro_prestamo FROM prestamo AS p JOIN pago AS pa ON p.nro_prestamo = pa.nro_prestamo WHERE p.nro_cliente="+nroCliente+" AND pa.fecha_pago IS NULL");
+		if(rs.next()){
+			retorno = rs.getInt("nro_prestamo");
+		}	else {
+			throw new Exception("No existe prestamo vigentes");
+		}
+		return retorno;
 	}
 
 
