@@ -106,16 +106,11 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		logger.info("Busca la tasa correspondiente a el monto {} con una cantidad de meses {}", monto, cantidadMeses);
 
 		double retorno = 0;
-		ResultSet rs=consulta("SELECT DISTINCT tasa FROM Tasa_Prestamo WHERE monto_inf = "+monto+" AND periodo = "+cantidadMeses);
-		//ResultSet rs2=consulta("SELECT DISTINCT tasa FROM Tasa_Plazo_Fijo WHERE monto_inf = "+monto+" AND periodo = "+cantidadMeses);
+		ResultSet rs=consulta("SELECT DISTINCT tasa FROM Tasa_Prestamo WHERE monto_inf = "+monto+" AND "+monto+" <= monto_sup AND periodo = "+cantidadMeses);
 
 		if (rs.next()) {
 			retorno = rs.getDouble("tasa");
 		}
-
-		//else if(rs2.next()){
-		//	retorno = rs2.getDouble("tasa");
-		//}
 
 		/** 
 		 * TODO Debe buscar la tasa correspondiente según el monto y la cantidadMeses. 

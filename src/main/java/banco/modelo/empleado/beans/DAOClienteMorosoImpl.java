@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ public class DAOClienteMorosoImpl implements DAOClienteMoroso {
 		ClienteMorosoBean morosoAux = new ClienteMorosoBeanImpl();
 
 		java.sql.Statement statement = conexion.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT nro_cliente,p.nro_prestamo,COUNT(nro_pago) FROM prestamo AS p JOIN pago AS pa ON p.nro_prestamo=pa.nro_prestamo WHERE pa.fecha_pago IS NULL AND pa.fecha_venc< FECHAFICTICA GROUP BY p.nro_prestamo");
+		ResultSet rs = statement.executeQuery("SELECT nro_cliente,p.nro_prestamo,COUNT(nro_pago) FROM prestamo AS p JOIN pago AS pa ON p.nro_prestamo=pa.nro_prestamo WHERE pa.fecha_pago IS NULL AND pa.fecha_venc< '"+Calendar.getInstance().getTime().toString()+"' GROUP BY p.nro_prestamo");
 
 		while(rs.next()){
 			if(rs.getInt("nro_prestamo")>1){

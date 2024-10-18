@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -59,7 +60,7 @@ public class DAOPagoImpl implements DAOPago {
 		java.sql.Statement statement = conexion.createStatement();
 
 		for(int i=0 ;i < cuotasAPagar.size(); i++){
-			statement.executeQuery("UPDATE pago SET fecha_pago = FECHADUDA WHERE nro_prestamo = "+nroPrestamo+" AND fecha_pago IS NULL AND nro_pago = "+cuotasAPagar.get(i));
+			statement.executeQuery("UPDATE pago SET fecha_pago = '"+Calendar.getInstance().getTime().toString()+"' WHERE nro_prestamo = "+nroPrestamo+" AND fecha_pago IS NULL AND nro_pago = "+cuotasAPagar.get(i));
 		}	
 	}
 		/**

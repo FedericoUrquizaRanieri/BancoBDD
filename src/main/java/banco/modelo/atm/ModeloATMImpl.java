@@ -200,13 +200,16 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	
 	@Override
 	public int parseCuenta(String p_cuenta) throws Exception {
-		
+
 		logger.info("Intenta realizar el parsing de un codigo de cuenta {}", p_cuenta);
 
 		if (p_cuenta == null) {
 			throw new Exception("El código de la cuenta no puede ser vacío");
 		}
 
+		int retorno = 0;
+        ResultSet rs = consulta("SELECT DISTINCT cod_caja FROM tarjeta WHERE nro_ca = "+p_cuenta);
+        retorno = rs.getInt("cod_caja");
 		/**
 		 * TODO Verifica que el codigo de la cuenta sea valido. 
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
@@ -217,7 +220,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		 */
 		
 		logger.info("Encontró la cuenta en la BD.");
-        return 1;
+        return retorno;
 	}	
 	
 	@Override

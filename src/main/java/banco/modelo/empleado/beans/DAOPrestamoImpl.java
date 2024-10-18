@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Calendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		logger.debug("cliente : {}", prestamo.getNroCliente());
 		
 		java.sql.Statement statement = conexion.createStatement();
-		statement.executeQuery("INSERT INTO prestamo (nro_prestamo,fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,legajo,nro_cliente) VALUES (CONSULTAR,'FECHAACTUAL',prestamo.getCantidadMeses(),prestamo.getMonto(),prestamo.getTasaInteres(),prestamo.getInteres(),prestamo.getValorCuota(),prestamo.getLegajo(),prestamo.getNroCliente()");
+		statement.executeQuery("INSERT INTO prestamo (nro_prestamo,fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,legajo,nro_cliente) VALUES (CONSULTAR,'"+Calendar.getInstance().getTime().toString()+"',prestamo.getCantidadMeses(),prestamo.getMonto(),prestamo.getTasaInteres(),prestamo.getInteres(),prestamo.getValorCuota(),prestamo.getLegajo(),prestamo.getNroCliente()");
 
 		for(int i = 1; i <= prestamo.getCantidadMeses(); i++){
 			statement.executeQuery("");
