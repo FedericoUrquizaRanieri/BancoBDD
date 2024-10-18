@@ -112,7 +112,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta",cantidad);
 
 		ArrayList<TransaccionCajaAhorroBean> retorno = new ArrayList<TransaccionCajaAhorroBean>(cantidad);
-		ResultSet rs = consulta("SELECT DISTINCT fecha,hora,tipo,monto,cod_caja,destino FROM trans_cajas_ahorro AS t JOIN tarjeta AS tar ON tar.nro_ca = t.nro_ca ORDER BY fecha DESC LIMIT "+cantidad);
+		ResultSet rs = consulta("SELECT DISTINCT fecha,hora,tipo,monto,cod_caja,destino FROM trans_cajas_ahorro AS t JOIN tarjeta AS tar ON tar.nro_ca = t.nro_ca WHERE tar.nro_tarjeta = "+tarjeta+" ORDER BY fecha DESC LIMIT 15");
 
 		int aux = 0;
 		TransaccionCajaAhorroBean trans;
@@ -154,7 +154,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		ArrayList<TransaccionCajaAhorroBean> retorno = new ArrayList<TransaccionCajaAhorroBean>();
 		System.out.println(Fechas.convertirDateADateSQL(desde));
 		System.out.println(Fechas.convertirDateADateSQL(hasta));
-		ResultSet rs = consulta("SELECT DISTINCT fecha,hora,tipo,monto,cod_caja,destino FROM trans_cajas_ahorro AS t JOIN tarjeta AS tar ON tar.nro_ca = t.nro_ca WHERE fecha >= '"+Fechas.convertirDateADateSQL(desde)+"' AND fecha <= '"+Fechas.convertirDateADateSQL(hasta)+"' ORDER BY fecha DESC");
+		ResultSet rs = consulta("SELECT DISTINCT fecha,hora,tipo,monto,cod_caja,destino FROM trans_cajas_ahorro AS t JOIN tarjeta AS tar ON tar.nro_ca = t.nro_ca WHERE tar.nro_tarjeta = "+tarjeta+" AND fecha >= '"+Fechas.convertirDateADateSQL(desde)+"' AND fecha <= '"+Fechas.convertirDateADateSQL(hasta)+"' ORDER BY fecha DESC");
 
 		int aux = 0;
 		TransaccionCajaAhorroBean trans;

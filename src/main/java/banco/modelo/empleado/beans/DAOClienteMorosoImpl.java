@@ -39,12 +39,14 @@ public class DAOClienteMorosoImpl implements DAOClienteMoroso {
 		ResultSet rs = statement.executeQuery("SELECT nro_cliente,p.nro_prestamo,COUNT(nro_pago) FROM prestamo AS p JOIN pago AS pa ON p.nro_prestamo=pa.nro_prestamo WHERE pa.fecha_pago IS NULL AND pa.fecha_venc< FECHAFICTICA GROUP BY p.nro_prestamo");
 
 		while(rs.next()){
-			prestamo = daoPrestamo.recuperarPrestamo(rs.getInt("nro_prestamo")); // El prestamo 1 tiene cuotas atrasadas - valor que deberá ser obtenido por la SQL
-			cliente = daoCliente.recuperarCliente(prestamo.getNroCliente());
-			morosoAux.setCliente(cliente);
-			morosoAux.setPrestamo(prestamo);
-			morosoAux.setCantidadCuotasAtrasadas(rs.getInt("COUNT(nro_pago)"));  //valor que deberá ser obtenido por la SQL
-			morosos.add(morosoAux);
+			if(rs.getInt("nro_prestamo")>1){
+				prestamo = daoPrestamo.recuperarPrestamo(rs.getInt("nro_prestamo")); // El prestamo 1 tiene cuotas atrasadas - valor que deberá ser obtenido por la SQL
+				cliente = daoCliente.recuperarCliente(prestamo.getNroCliente());
+				morosoAux.setCliente(cliente);
+				morosoAux.setPrestamo(prestamo);
+				morosoAux.setCantidadCuotasAtrasadas(rs.getInt("COUNT(nro_pago)"));  //valor que deberá ser obtenido por la SQL
+				morosos.add(morosoAux);
+			}
 		}
 		/**
 		 * TODO Deberá recuperar un listado de clientes morosos los cuales consisten de un bean ClienteMorosoBeanImpl
