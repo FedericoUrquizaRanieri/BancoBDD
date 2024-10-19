@@ -1,12 +1,10 @@
 package banco.modelo.empleado.beans;
 
 import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Calendar;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +33,13 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		logger.debug("cuota : {}", prestamo.getValorCuota());
 		logger.debug("legajo : {}", prestamo.getLegajo());
 		logger.debug("cliente : {}", prestamo.getNroCliente());
-		
-		Statement statement =conexion.createStatement();
-		String q="INSERT INTO prestamo (nro_prestamo,fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,legajo,nro_cliente) VALUES (NULL,'"+Fechas.convertirDateADateSQL(new java.util.Date())+"',"+prestamo.getCantidadMeses()+","+prestamo.getMonto()+","+prestamo.getTasaInteres()+","+prestamo.getInteres()+","+prestamo.getValorCuota()+","+prestamo.getLegajo()+","+prestamo.getNroCliente()+")";
-		System.out.println(q);
-		statement.execute(q);
+		try {
+			Statement statement =conexion.createStatement();
+			String q="INSERT INTO prestamo (nro_prestamo,fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,legajo,nro_cliente) VALUES (NULL,'"+Fechas.convertirDateADateSQL(new java.util.Date())+"',"+prestamo.getCantidadMeses()+","+prestamo.getMonto()+","+prestamo.getTasaInteres()+","+prestamo.getInteres()+","+prestamo.getValorCuota()+","+prestamo.getLegajo()+","+prestamo.getNroCliente()+")";
+			statement.execute(q);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 		
 		/**   
 		 * TODO Crear un Prestamo segun el PrestamoBean prestamo. 
@@ -60,7 +60,12 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		logger.info("Recupera el prestamo nro {}.", nroPrestamo);
 
 		java.sql.Statement statement = conexion.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM prestamo WHERE nro_prestamo = "+nroPrestamo);
+		ResultSet rs = null;
+		try {
+			rs=statement.executeQuery("SELECT * FROM prestamo WHERE nro_prestamo = "+nroPrestamo);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 		PrestamoBean prestamo;
 		prestamo = new PrestamoBeanImpl();
 

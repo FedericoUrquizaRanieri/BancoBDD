@@ -1,18 +1,14 @@
 package banco.modelo.empleado.beans;
 
-import java.beans.Statement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import banco.modelo.atm.TransaccionCajaAhorroBean;
 import banco.utils.Fechas;
 
 public class DAOClienteMorosoImpl implements DAOClienteMoroso {
@@ -37,23 +33,28 @@ public class DAOClienteMorosoImpl implements DAOClienteMoroso {
 		PrestamoBean prestamo = null;
 		ClienteBean cliente = null;
 		ClienteMorosoBean morosoAux;
-
+		ResultSet rs=null;
 		java.sql.Statement statement = conexion.createStatement();
 		String q ="SELECT nro_cliente,p.nro_prestamo,COUNT(nro_pago) FROM prestamo AS p JOIN pago AS pa ON p.nro_prestamo=pa.nro_prestamo WHERE pa.fecha_pago IS NULL AND pa.fecha_venc< '"+Fechas.convertirDateADateSQL(new Date())+"' GROUP BY p.nro_prestamo";
-		System.out.println(q);
-		ResultSet rs = statement.executeQuery(q);
+		try {
+			rs = statement.executeQuery(q);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 
 		while(rs.next()){
 			if(rs.getInt("COUNT(nro_pago)")>1){
 				morosoAux = new ClienteMorosoBeanImpl();
 				prestamo = daoPrestamo.recuperarPrestamo(rs.getInt("nro_prestamo")); // El prestamo 1 tiene cuotas atrasadas - valor que deberá ser obtenido por la SQL
-				System.out.println("Mogoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo");
 				cliente = daoCliente.recuperarCliente(prestamo.getNroCliente());
 				morosoAux.setCliente(cliente);
 				morosoAux.setPrestamo(prestamo);
 				morosoAux.setCantidadCuotasAtrasadas(rs.getInt("COUNT(nro_pago)"));  //valor que deberá ser obtenido por la SQL
 				morosos.add(morosoAux);
 			}
+		}
+		if(morosos.isEmpty()){
+			throw new Exception("No hay clientes morosos");
 		}
 		/**
 		 * TODO Deberá recuperar un listado de clientes morosos los cuales consisten de un bean ClienteMorosoBeanImpl

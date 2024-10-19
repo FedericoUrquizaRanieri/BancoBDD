@@ -1,7 +1,6 @@
 package banco.modelo.empleado.beans;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -25,7 +24,12 @@ public class DAOClienteImpl implements DAOCliente {
 
 		logger.info("recupera el cliente con documento de tipo {} y nro {}.", tipoDoc, nroDoc);
 		java.sql.Statement statement = conexion.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM cliente WHERE tipo_doc= '"+tipoDoc+"' AND nro_doc = "+nroDoc);
+		ResultSet rs = null;
+		try {
+			rs=statement.executeQuery("SELECT * FROM cliente WHERE tipo_doc= '"+tipoDoc+"' AND nro_doc = "+nroDoc);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 
 		ClienteBean cliente = new ClienteBeanImpl();
 				
@@ -50,7 +54,12 @@ public class DAOClienteImpl implements DAOCliente {
 		logger.info("recupera el cliente por nro de cliente.");
 
 		java.sql.Statement statement = conexion.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM cliente WHERE nro_cliente = "+nroCliente);
+		ResultSet rs=null;
+		try {
+			rs = statement.executeQuery("SELECT * FROM cliente WHERE nro_cliente = "+nroCliente);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 		
 		ClienteBean cliente = new ClienteBeanImpl();
 				

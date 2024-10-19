@@ -1,11 +1,9 @@
 package banco.modelo.empleado.beans;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -30,7 +28,12 @@ public class DAOPagoImpl implements DAOPago {
 		logger.info("Inicia la recuperacion de los pagos del prestamo {}", nroPrestamo);
 		
 		java.sql.Statement statement = conexion.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM pago WHERE nro_prestamo = "+nroPrestamo);
+		ResultSet rs = null;
+		try {
+			rs = statement.executeQuery("SELECT * FROM pago WHERE nro_prestamo = "+nroPrestamo);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 
 		ArrayList<PagoBean> retorno = new ArrayList<PagoBean>();
 		PagoBean fila;
@@ -42,6 +45,9 @@ public class DAOPagoImpl implements DAOPago {
 			fila.setFechaVencimiento(Fechas.convertirStringADate(rs.getString("fecha_venc")));
 			fila.setFechaPago(Fechas.convertirStringADate(rs.getString("fecha_pago")));
 			retorno.add(fila);
+		}
+		if(retorno.isEmpty()){
+			throw new Exception("No hay pagos");
 		}
 		return retorno;
 
@@ -57,9 +63,12 @@ public class DAOPagoImpl implements DAOPago {
 		logger.info("Inicia el pago de las {} cuotas del prestamo {}", cuotasAPagar.size(), nroPrestamo);
 
 		java.sql.Statement statement = conexion.createStatement();
-
-		for(int i=0 ;i < cuotasAPagar.size(); i++){
-			statement.executeUpdate("UPDATE pago SET fecha_pago = '"+Fechas.convertirDateADateSQL(new Date())+"' WHERE nro_prestamo = "+nroPrestamo+" AND fecha_pago IS NULL AND nro_pago = "+cuotasAPagar.get(i));
+		try {
+			for(int i=0 ;i < cuotasAPagar.size(); i++){
+				statement.executeUpdate("UPDATE pago SET fecha_pago = '"+Fechas.convertirDateADateSQL(new Date())+"' WHERE nro_prestamo = "+nroPrestamo+" AND fecha_pago IS NULL AND nro_pago = "+cuotasAPagar.get(i));
+			}	
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
 		}	
 	}
 		/**

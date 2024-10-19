@@ -1,14 +1,11 @@
 package banco.modelo.empleado.beans;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import banco.utils.Fechas;
 
 public class DAOEmpleadoImpl implements DAOEmpleado {
 
@@ -26,7 +23,12 @@ public class DAOEmpleadoImpl implements DAOEmpleado {
 		logger.info("recupera el empleado que corresponde al legajo {}.", legajo);
 		
 		java.sql.Statement statement = conexion.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM empleado WHERE legajo = "+legajo);
+		ResultSet rs = null;
+		try {
+			rs = statement.executeQuery("SELECT * FROM empleado WHERE legajo = "+legajo);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 		
 		EmpleadoBean empleado = new EmpleadoBeanImpl();
 				

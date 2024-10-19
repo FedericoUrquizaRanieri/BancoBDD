@@ -1,10 +1,8 @@
 package banco.modelo.empleado;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -50,8 +48,12 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
         catch (Exception ex) {
             throw new Exception("Se esperaba que el legajo sea un valor entero.");
         }
-
-        ResultSet rs=consulta("SELECT legajo,password FROM empleado WHERE legajo = "+legajoInt);
+		ResultSet rs=null;
+		try {
+			rs=consulta("SELECT legajo,password FROM empleado WHERE legajo = "+legajoInt);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
         if (rs.next()) {
             if (rs.getString("password").equals(password)) {
 				this.legajo = legajoInt;
@@ -77,13 +79,16 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 	}	
 	
 	@Override
-	//Hecho
 	public ArrayList<String> obtenerTiposDocumento() throws Exception {
 		logger.info("recupera los tipos de documentos.");
 
 		ArrayList<String> retorno = new ArrayList<>();
-		ResultSet rs=consulta("SELECT DISTINCT tipo_doc FROM empleado");
-
+		ResultSet rs=null;
+		try {
+			rs=consulta("SELECT DISTINCT tipo_doc FROM empleado");
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 		int aux = 0;
 		while (rs.next()) {
 			retorno.add(aux, rs.getString("tipo_doc"));
@@ -94,22 +99,25 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		 * TODO Debe retornar una lista de strings con los tipos de documentos. 
 		 *      Deberia propagar una excepción si hay algún error en la consulta.
 		 */
-		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */
 	}	
 
 	@Override
+	//
 	public double obtenerTasa(double monto, int cantidadMeses) throws Exception {
 
 		logger.info("Busca la tasa correspondiente a el monto {} con una cantidad de meses {}", monto, cantidadMeses);
 
 		double retorno = 0;
-		ResultSet rs=consulta("SELECT DISTINCT tasa FROM Tasa_Prestamo WHERE monto_inf <= "+monto+" AND "+monto+" <= monto_sup AND periodo = "+cantidadMeses);
-
+		ResultSet rs=null;
+		try {
+			rs=consulta("SELECT DISTINCT tasa FROM Tasa_Prestamo WHERE monto_inf <= "+monto+" AND "+monto+" <= monto_sup AND periodo = "+cantidadMeses);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 		if (rs.next()) {
 			retorno = rs.getDouble("tasa");
+		} else{
+			throw new Exception("ERROR. No existen periodos segun el monto establecido.");
 		}
 
 		/** 
@@ -145,8 +153,12 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		logger.info("recupera los períodos (cantidad de meses) según el monto {} para el prestamo.", monto);
 
 		ArrayList<Integer> retorno = new ArrayList<Integer>();
-		ResultSet rs=consulta("SELECT DISTINCT periodo FROM Tasa_Prestamo WHERE monto_inf <= "+monto+" AND monto_sup >= "+monto);
-
+		ResultSet rs=null;
+		try {
+			rs=consulta("SELECT DISTINCT periodo FROM Tasa_Prestamo WHERE monto_inf <= "+monto+" AND monto_sup >= "+monto);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 		int aux = 0;
 		while (rs.next()) {
 			retorno.add(aux, rs.getInt("periodo"));
@@ -155,7 +167,6 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		if(retorno.isEmpty()){
 			throw new Exception("ERROR. No existen periodos segun el monto establecido.");
 		}
-
 		return retorno;
 	}
 
@@ -165,11 +176,20 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		logger.info("Verifica si el cliente {} tiene algun prestamo que tienen cuotas por pagar.", nroCliente);
 
 		int retorno = 0;
-		ResultSet rs=consulta("SELECT DISTINCT p.nro_prestamo FROM prestamo AS p JOIN pago AS pa ON p.nro_prestamo = pa.nro_prestamo WHERE p.nro_cliente="+nroCliente+" AND pa.fecha_pago IS NULL");
-		ResultSet pagos;
+		ResultSet rs=null;
+		try {
+			rs=consulta("SELECT DISTINCT p.nro_prestamo FROM prestamo AS p JOIN pago AS pa ON p.nro_prestamo = pa.nro_prestamo WHERE p.nro_cliente="+nroCliente+" AND pa.fecha_pago IS NULL");
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
+		ResultSet pagos=null;
 		if(rs.next()){
 			retorno = rs.getInt("nro_prestamo");
-			pagos=consulta("SELECT nro_prestamo FROM pago WHERE nro_prestamo="+retorno+" AND fecha_pago IS NULL");
+			try {
+				pagos=consulta("SELECT nro_prestamo FROM pago WHERE nro_prestamo="+retorno+" AND fecha_pago IS NULL");
+			} catch (Exception e) {
+				throw new SQLException(e.getMessage());
+			}
 			if(!pagos.next()){
 				return null;
 			}

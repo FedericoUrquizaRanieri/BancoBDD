@@ -1,8 +1,6 @@
 package banco.modelo.atm;
 
 import java.io.FileInputStream;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
@@ -58,7 +56,12 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		if (tarjeta == null) {
 			throw new Exception("El cliente no ingresó la tarjeta");
 		}
-		ResultSet rs=consulta("SELECT nro_tarjeta,PIN FROM tarjeta WHERE nro_tarjeta="+tarjeta);
+		ResultSet rs=null;
+		try {
+			rs=consulta("SELECT nro_tarjeta,PIN FROM tarjeta WHERE nro_tarjeta="+tarjeta);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 		if (rs.next()) {
 			System.out.println(rs.getString("PIN"));
 			if (rs.getString("PIN").equals(pin)) {
@@ -94,7 +97,12 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			throw new Exception("El cliente no ingresó la tarjeta");
 		}
 
-		ResultSet rs = consulta("SELECT saldo FROM trans_cajas_ahorro AS tr JOIN tarjeta AS t ON t.nro_ca = tr.nro_ca WHERE t.nro_tarjeta="+this.tarjeta+" ORDER BY fecha DESC LIMIT 1");
+		ResultSet rs = null;
+		try {
+			rs=consulta("SELECT saldo FROM trans_cajas_ahorro AS tr JOIN tarjeta AS t ON t.nro_ca = tr.nro_ca WHERE t.nro_tarjeta="+this.tarjeta+" ORDER BY fecha DESC LIMIT 1");
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 		if (rs.next()) {
 			return rs.getDouble("saldo");
 		} else {
@@ -112,7 +120,12 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta",cantidad);
 
 		ArrayList<TransaccionCajaAhorroBean> retorno = new ArrayList<TransaccionCajaAhorroBean>(cantidad);
-		ResultSet rs = consulta("SELECT DISTINCT fecha,hora,tipo,monto,cod_caja,destino FROM trans_cajas_ahorro AS t JOIN tarjeta AS tar ON tar.nro_ca = t.nro_ca WHERE tar.nro_tarjeta = "+tarjeta+" ORDER BY fecha DESC LIMIT 15");
+		ResultSet rs = null;
+		try {
+			rs = consulta("SELECT DISTINCT fecha,hora,tipo,monto,cod_caja,destino FROM trans_cajas_ahorro AS t JOIN tarjeta AS tar ON tar.nro_ca = t.nro_ca WHERE tar.nro_tarjeta = "+tarjeta+" ORDER BY fecha DESC LIMIT 15");
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 
 		int aux = 0;
 		TransaccionCajaAhorroBean trans;
@@ -125,6 +138,9 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			trans.setCajaAhorroDestinoNumero(rs.getInt("destino"));
 			retorno.add(aux,trans);
 			aux++;
+		}
+		if(retorno.isEmpty()){
+			throw new Exception("No hay movimientos");
 		}
 		return retorno;
 	}
@@ -152,10 +168,12 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		}
 
 		ArrayList<TransaccionCajaAhorroBean> retorno = new ArrayList<TransaccionCajaAhorroBean>();
-		System.out.println(Fechas.convertirDateADateSQL(desde));
-		System.out.println(Fechas.convertirDateADateSQL(hasta));
-		ResultSet rs = consulta("SELECT DISTINCT fecha,hora,tipo,monto,cod_caja,destino FROM trans_cajas_ahorro AS t JOIN tarjeta AS tar ON tar.nro_ca = t.nro_ca WHERE tar.nro_tarjeta = "+tarjeta+" AND fecha >= '"+Fechas.convertirDateADateSQL(desde)+"' AND fecha <= '"+Fechas.convertirDateADateSQL(hasta)+"' ORDER BY fecha DESC");
-
+		ResultSet rs = null;
+		try {
+			rs = consulta("SELECT DISTINCT fecha,hora,tipo,monto,cod_caja,destino FROM trans_cajas_ahorro AS t JOIN tarjeta AS tar ON tar.nro_ca = t.nro_ca WHERE tar.nro_tarjeta = "+tarjeta+" AND fecha >= '"+Fechas.convertirDateADateSQL(desde)+"' AND fecha <= '"+Fechas.convertirDateADateSQL(hasta)+"' ORDER BY fecha DESC");
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
 		int aux = 0;
 		TransaccionCajaAhorroBean trans;
 		while (rs.next()){
@@ -167,6 +185,9 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			trans.setCajaAhorroDestinoNumero(rs.getInt("destino"));
 			retorno.add(aux,trans);
 			aux++;
+		}
+		if(retorno.isEmpty()){
+			throw new Exception("No hay movimientos");
 		}
 		return retorno;
 	}
@@ -208,8 +229,17 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		}
 
 		int retorno = 0;
-        ResultSet rs = consulta("SELECT DISTINCT cod_caja FROM tarjeta WHERE nro_ca = "+p_cuenta);
-        retorno = rs.getInt("cod_caja");
+        ResultSet rs = null;
+		try {
+			rs = consulta("SELECT DISTINCT cod_caja FROM tarjeta WHERE nro_ca = "+p_cuenta);
+		} catch (Exception e) {
+			throw new SQLException(e.getMessage());
+		}
+		if(rs.next()){
+			retorno = rs.getInt("cod_caja");
+		}else{
+			throw new Exception("No existe una cuenta bajo estas caracteristicas");
+		}
 		/**
 		 * TODO Verifica que el codigo de la cuenta sea valido. 
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
