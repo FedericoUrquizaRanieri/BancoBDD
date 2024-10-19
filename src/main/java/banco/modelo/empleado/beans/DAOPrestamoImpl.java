@@ -1,6 +1,7 @@
 package banco.modelo.empleado.beans;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,12 +36,10 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		logger.debug("legajo : {}", prestamo.getLegajo());
 		logger.debug("cliente : {}", prestamo.getNroCliente());
 		
-		java.sql.Statement statement = conexion.createStatement();
-		statement.executeQuery("INSERT INTO prestamo (nro_prestamo,fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,legajo,nro_cliente) VALUES (CONSULTAR,'"+Calendar.getInstance().getTime().toString()+"',prestamo.getCantidadMeses(),prestamo.getMonto(),prestamo.getTasaInteres(),prestamo.getInteres(),prestamo.getValorCuota(),prestamo.getLegajo(),prestamo.getNroCliente()");
-
-		for(int i = 1; i <= prestamo.getCantidadMeses(); i++){
-			statement.executeQuery("");
-		}
+		Statement statement =conexion.createStatement();
+		String q="INSERT INTO prestamo (nro_prestamo,fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,legajo,nro_cliente) VALUES (NULL,'"+Fechas.convertirDateADateSQL(new java.util.Date())+"',"+prestamo.getCantidadMeses()+","+prestamo.getMonto()+","+prestamo.getTasaInteres()+","+prestamo.getInteres()+","+prestamo.getValorCuota()+","+prestamo.getLegajo()+","+prestamo.getNroCliente()+")";
+		System.out.println(q);
+		statement.execute(q);
 		
 		/**   
 		 * TODO Crear un Prestamo segun el PrestamoBean prestamo. 
@@ -61,19 +60,21 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		logger.info("Recupera el prestamo nro {}.", nroPrestamo);
 
 		java.sql.Statement statement = conexion.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM pago WHERE nro_prestamo = "+nroPrestamo);
-		PrestamoBean prestamo = null;
-		
+		ResultSet rs = statement.executeQuery("SELECT * FROM prestamo WHERE nro_prestamo = "+nroPrestamo);
+		PrestamoBean prestamo;
 		prestamo = new PrestamoBeanImpl();
-		prestamo.setNroPrestamo(rs.getInt("nro_prestamo"));
-		prestamo.setFecha(Fechas.convertirStringADate(rs.getString("fecha")));
-		prestamo.setCantidadMeses(rs.getInt("cant_meses"));
-		prestamo.setMonto(rs.getInt("monto"));
-		prestamo.setTasaInteres(rs.getInt("tasa_interes"));
-		prestamo.setInteres(rs.getInt("interes"));
-		prestamo.setValorCuota(rs.getInt("valor_cuota"));
-		prestamo.setLegajo(rs.getInt("legajo"));
-		prestamo.setNroCliente(rs.getInt("nro_cliente"));
+
+		if(rs.next()){
+			prestamo.setNroPrestamo(rs.getInt("nro_prestamo"));
+			prestamo.setFecha(rs.getDate("fecha"));
+			prestamo.setCantidadMeses(rs.getInt("cant_meses"));
+			prestamo.setMonto(rs.getDouble("monto"));
+			prestamo.setTasaInteres(rs.getDouble("tasa_interes"));
+			prestamo.setInteres(rs.getDouble("interes"));
+			prestamo.setValorCuota(rs.getDouble("valor_cuota"));
+			prestamo.setLegajo(rs.getInt("legajo"));
+			prestamo.setNroCliente(rs.getInt("nro_cliente"));
+		}
 
 	
 		/**

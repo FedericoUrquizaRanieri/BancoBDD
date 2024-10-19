@@ -35,7 +35,7 @@ public class DAOEmpleadoImpl implements DAOEmpleado {
 			empleado.setApellido(rs.getString("apellido"));
 			empleado.setNombre(rs.getString("nombre"));
 			empleado.setTipoDocumento(rs.getString("tipo_doc"));
-			empleado.setNroDocumento(rs.getInt("nroDoc"));
+			empleado.setNroDocumento(rs.getInt("nro_doc"));
 			empleado.setDireccion(rs.getString("direccion"));
 			empleado.setTelefono(rs.getString("telefono"));
 			empleado.setCargo(rs.getString("cargo"));

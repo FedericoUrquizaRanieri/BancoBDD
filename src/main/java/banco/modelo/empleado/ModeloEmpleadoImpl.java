@@ -106,7 +106,7 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		logger.info("Busca la tasa correspondiente a el monto {} con una cantidad de meses {}", monto, cantidadMeses);
 
 		double retorno = 0;
-		ResultSet rs=consulta("SELECT DISTINCT tasa FROM Tasa_Prestamo WHERE monto_inf = "+monto+" AND "+monto+" <= monto_sup AND periodo = "+cantidadMeses);
+		ResultSet rs=consulta("SELECT DISTINCT tasa FROM Tasa_Prestamo WHERE monto_inf <= "+monto+" AND "+monto+" <= monto_sup AND periodo = "+cantidadMeses);
 
 		if (rs.next()) {
 			retorno = rs.getDouble("tasa");
@@ -145,7 +145,7 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		logger.info("recupera los períodos (cantidad de meses) según el monto {} para el prestamo.", monto);
 
 		ArrayList<Integer> retorno = new ArrayList<Integer>();
-		ResultSet rs=consulta("SELECT DISTINCT periodo FROM Tasa_Prestamo WHERE monto_inf <= "+monto+" AND monto_sup => "+monto);
+		ResultSet rs=consulta("SELECT DISTINCT periodo FROM Tasa_Prestamo WHERE monto_inf <= "+monto+" AND monto_sup >= "+monto);
 
 		int aux = 0;
 		while (rs.next()) {
@@ -166,10 +166,15 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 
 		int retorno = 0;
 		ResultSet rs=consulta("SELECT DISTINCT p.nro_prestamo FROM prestamo AS p JOIN pago AS pa ON p.nro_prestamo = pa.nro_prestamo WHERE p.nro_cliente="+nroCliente+" AND pa.fecha_pago IS NULL");
+		ResultSet pagos;
 		if(rs.next()){
 			retorno = rs.getInt("nro_prestamo");
+			pagos=consulta("SELECT nro_prestamo FROM pago WHERE nro_prestamo="+retorno+" AND fecha_pago IS NULL");
+			if(!pagos.next()){
+				return null;
+			}
 		}	else {
-			throw new Exception("No existe prestamo vigentes");
+			return null;
 		}
 		return retorno;
 	}

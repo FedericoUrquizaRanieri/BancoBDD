@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -34,15 +35,13 @@ public class DAOPagoImpl implements DAOPago {
 		ArrayList<PagoBean> retorno = new ArrayList<PagoBean>();
 		PagoBean fila;
 
-		if(rs.next()){
+		while(rs.next()){
 			fila = new PagoBeanImpl();
 			fila.setNroPrestamo(rs.getInt("nro_prestamo"));
 			fila.setNroPago(rs.getInt("nro_pago"));
 			fila.setFechaVencimiento(Fechas.convertirStringADate(rs.getString("fecha_venc")));
 			fila.setFechaPago(Fechas.convertirStringADate(rs.getString("fecha_pago")));
 			retorno.add(fila);
-		} else{
-			new Exception("ERROR en la recuperacion de pagos");
 		}
 		return retorno;
 
@@ -60,7 +59,7 @@ public class DAOPagoImpl implements DAOPago {
 		java.sql.Statement statement = conexion.createStatement();
 
 		for(int i=0 ;i < cuotasAPagar.size(); i++){
-			statement.executeQuery("UPDATE pago SET fecha_pago = '"+Calendar.getInstance().getTime().toString()+"' WHERE nro_prestamo = "+nroPrestamo+" AND fecha_pago IS NULL AND nro_pago = "+cuotasAPagar.get(i));
+			statement.executeUpdate("UPDATE pago SET fecha_pago = '"+Fechas.convertirDateADateSQL(new Date())+"' WHERE nro_prestamo = "+nroPrestamo+" AND fecha_pago IS NULL AND nro_pago = "+cuotasAPagar.get(i));
 		}	
 	}
 		/**

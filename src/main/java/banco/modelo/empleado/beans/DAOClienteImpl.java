@@ -25,7 +25,7 @@ public class DAOClienteImpl implements DAOCliente {
 
 		logger.info("recupera el cliente con documento de tipo {} y nro {}.", tipoDoc, nroDoc);
 		java.sql.Statement statement = conexion.createStatement();
-		ResultSet rs = statement.executeQuery("SELECT * FROM cliente WHERE tipo_doc= "+tipoDoc+" AND nro_doc = "+nroDoc);
+		ResultSet rs = statement.executeQuery("SELECT * FROM cliente WHERE tipo_doc= '"+tipoDoc+"' AND nro_doc = "+nroDoc);
 
 		ClienteBean cliente = new ClienteBeanImpl();
 				
@@ -34,7 +34,7 @@ public class DAOClienteImpl implements DAOCliente {
 			cliente.setApellido(rs.getString("apellido"));
 			cliente.setNombre(rs.getString("nombre"));
 			cliente.setTipoDocumento(rs.getString("tipo_doc"));
-			cliente.setNroDocumento(rs.getInt("nroDoc"));
+			cliente.setNroDocumento(rs.getInt("nro_doc"));
 			cliente.setDireccion(rs.getString("direccion"));
 			cliente.setTelefono(rs.getString("telefono"));
 			cliente.setFechaNacimiento(Fechas.convertirStringADate(rs.getString("fecha_nac")));
@@ -59,10 +59,10 @@ public class DAOClienteImpl implements DAOCliente {
 			cliente.setApellido(rs.getString("apellido"));
 			cliente.setNombre(rs.getString("nombre"));
 			cliente.setTipoDocumento(rs.getString("tipo_doc"));
-			cliente.setNroDocumento(rs.getInt("nroDoc"));
+			cliente.setNroDocumento(rs.getInt("nro_doc"));
 			cliente.setDireccion(rs.getString("direccion"));
 			cliente.setTelefono(rs.getString("telefono"));
-			cliente.setFechaNacimiento(Fechas.convertirStringADate(rs.getString("fecha_nac")));
+			cliente.setFechaNacimiento(rs.getDate("fecha_nac"));
 			}
 		else{
 			new Exception("No existe el cliente");
