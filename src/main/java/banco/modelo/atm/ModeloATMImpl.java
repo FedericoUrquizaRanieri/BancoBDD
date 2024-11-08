@@ -58,18 +58,13 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		}
 		ResultSet rs=null;
 		try {
-			rs=consulta("SELECT nro_tarjeta,PIN FROM tarjeta WHERE nro_tarjeta="+tarjeta);
+			rs=consulta("SELECT nro_tarjeta,PIN FROM tarjeta WHERE nro_tarjeta="+tarjeta+" AND pin=MD5("+pin+")");
 		} catch (Exception e) {
 			throw new SQLException(e.getMessage());
 		}
 		if (rs.next()) {
-			System.out.println(rs.getString("PIN"));
-			if (rs.getString("PIN").equals(pin)) {
-				this.tarjeta = tarjeta;
-				return true;
-			}
-			else
-				return false;
+			this.tarjeta=tarjeta;
+			return true;
 		} else {
 			throw new Exception("Error en la validacion de tarjeta");
 		}
@@ -129,11 +124,15 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 
 		int aux = 0;
 		TransaccionCajaAhorroBean trans;
+		int escalar=1;
 		while (rs.next()){
+			if(rs.getString("tipo").equals("deposito"))
+				escalar=1;
+			else escalar=-1;
 			trans = new TransaccionCajaAhorroBeanImpl();
 			trans.setTransaccionFechaHora(Fechas.convertirStringADate(rs.getString("fecha"),rs.getString("hora")));
 			trans.setTransaccionTipo(rs.getString("tipo"));
-			trans.setTransaccionMonto(Parsing.parseMonto(rs.getString("monto")));
+			trans.setTransaccionMonto(escalar*Parsing.parseMonto(rs.getString("monto")));
 			trans.setTransaccionCodigoCaja(rs.getInt("cod_caja"));
 			trans.setCajaAhorroDestinoNumero(rs.getInt("destino"));
 			retorno.add(aux,trans);
@@ -175,12 +174,16 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			throw new SQLException(e.getMessage());
 		}
 		int aux = 0;
+		int escalar=1;
 		TransaccionCajaAhorroBean trans;
 		while (rs.next()){
+			if(rs.getString("tipo").equals("deposito"))
+				escalar=1;
+			else escalar=-1;
 			trans = new TransaccionCajaAhorroBeanImpl();
 			trans.setTransaccionFechaHora(Fechas.convertirStringADate(rs.getString("fecha"),rs.getString("hora")));
 			trans.setTransaccionTipo(rs.getString("tipo"));
-			trans.setTransaccionMonto(Parsing.parseMonto(rs.getString("monto")));
+			trans.setTransaccionMonto(escalar*Parsing.parseMonto(rs.getString("monto")));
 			trans.setTransaccionCodigoCaja(rs.getInt("cod_caja"));
 			trans.setCajaAhorroDestinoNumero(rs.getInt("destino"));
 			retorno.add(aux,trans);
