@@ -321,6 +321,98 @@ UNION
 SELECT DISTINCT ca.nro_ca,ca.saldo,t.nro_trans,t.fecha,t.hora,'debito' AS tipo,t.monto,NULL AS cod_caja,c.nro_cliente,c.tipo_doc,c.nro_doc,c.nombre,c.apellido,NULL AS destino
 FROM transaccion t JOIN debito d ON t.nro_trans=d.nro_trans JOIN cliente c ON c.nro_cliente=d.nro_cliente JOIN caja_ahorro ca ON d.nro_ca=ca.nro_ca; 
 
+-- Creacion de trigger
+DELIMITER %%%
+
+CREATE DEFINER=`empleado`@`%` TRIGGER `crearPagos` AFTER INSERT ON `prestamo` FOR EACH ROW
+BEGIN
+	DECLARE i INT;
+	DECLARE pagos INT;
+	DECLARE fecha DATE;
+	SET i = 1;
+	SET pagos = NEW.cant_meses;
+	WHILE i <= pagos DO
+		SET fecha=DATE_ADD(NEW.fecha, INTERVAL i MONTH);
+		INSERT INTO pago (nro_prestamo,nro_pago,fecha_venc,fecha_pago) VALUES (NEW.nro_prestamo,i,fecha,NULL);
+		SET i = i+1;
+	END WHILE;
+END %%%
+
+DELIMITER ;
+
+-- Creacion de procedimiento de extraccion
+
+DELIMITER %%%
+
+CREATE PROCEDURE extraer(IN tar INT, IN monto DECIMAL(10,2), OUT resultado INT)
+BEGIN
+  DECLARE sald DECIMAL(10,2);
+  DECLARE cod INT;
+  DECLARE cliente INT;
+
+  SELECT nro_ca INTO cod FROM tarjeta WHERE nro_tarjeta=tar;
+  SELECT nro_cliente INTO cliente FROM tarjeta WHERE nro_tarjeta=tar;
+  SELECT saldo INTO sald FROM trans_cajas_ahorro AS tr JOIN tarjeta AS t ON t.nro_ca = tr.nro_ca WHERE t.nro_tarjeta=tar ORDER BY fecha DESC LIMIT 1;
+  START TRANSACTION;
+   	IF sald < monto THEN
+   		SET resultado = 1;
+   	ELSE 
+		  INSERT INTO `transaccion` (`nro_trans`, `fecha`, `hora`, `monto`) VALUES
+			(NULL, CURDATE(), CURTIME(), monto);
+  		INSERT INTO `transaccion_por_caja` (`nro_trans`, `cod_caja`) VALUES
+			(LAST_INSERT_ID(), cod);
+		  INSERT INTO `extraccion` (`nro_trans`, `nro_ca`, `nro_cliente`) VALUES
+			(LAST_INSERT_ID(), cod, cliente);
+		  UPDATE `caja_ahorro` SET saldo = sald - monto WHERE nro_ca=cod;
+		  SET resultado=0;
+		END IF;
+	COMMIT;
+END %%%
+
+DELIMITER ;
+
+-- Creacion de procedimiento de transferencia
+
+DELIMITER %%%
+
+CREATE PROCEDURE transferir(IN tarjeta_origen INT, IN cliente_destino INT,IN monto DECIMAL(10,2), IN nro_atm INT, OUT resultado INT)
+BEGIN
+   DECLARE cliente_origen INT;
+   DECLARE nro_cliente_origen INT;
+   DECLARE origen_saldo DECIMAL(10,2);
+   DECLARE existe INT;
+   
+   SELECT nro_ca INTO cliente_origen FROM tarjeta WHERE nro_tarjeta = tarjeta_origen;
+   SELECT nro_cliente INTO nro_cliente_origen FROM tarjeta WHERE nro_tarjeta = tarjeta_origen;
+   SELECT saldo INTO origen_saldo FROM trans_cajas_ahorro AS tr JOIN tarjeta AS t ON t.nro_ca = tr.nro_ca WHERE t.nro_tarjeta=tarjeta_origen ORDER BY fecha DESC LIMIT 1;
+   SELECT COUNT(nro_ca) INTO existe FROM tarjeta WHERE nro_ca = cliente_destino;
+   
+	START TRANSACTION;
+	
+	IF existe != 0 AND origen_saldo >= monto THEN
+		INSERT INTO transaccion(nro_trans, fecha, hora, monto)
+   	VALUES (NULL, CURDATE(), CURTIME(), monto);
+
+   	INSERT INTO transaccion_por_caja(nro_trans, cod_caja)
+   	VALUES (LAST_INSERT_ID(), nro_atm);
+
+   	UPDATE caja_ahorro SET saldo = saldo - monto WHERE nro_ca = cliente_origen;
+   	UPDATE caja_ahorro SET saldo = saldo + monto WHERE nro_ca = cliente_destino;
+
+   	INSERT INTO transferencia(nro_trans, nro_cliente, origen, destino)
+   	VALUES (LAST_INSERT_ID(), nro_cliente_origen, cliente_origen, cliente_destino);
+   	SET resultado = 0; -- Operacion exitosa
+	ELSEIF existe = 0 THEN
+   	SET resultado = 2;	-- Error destino inexistente
+	ELSEIF origen_saldo < monto THEN
+      SET resultado = 1;	-- Error saldo insuficiente
+   END IF;
+
+   COMMIT;
+END %%%
+
+DELIMITER ;
+
 -- Creo los usuarios y les otorgo permisos
 
 DROP USER IF EXISTS ''@'localhost';
@@ -345,12 +437,16 @@ GRANT SELECT, INSERT ON `banco`.`prestamo` TO `empleado`@`%`;
 GRANT SELECT, INSERT ON `banco`.`plazo_fijo` TO `empleado`@`%`;
 GRANT SELECT, INSERT ON `banco`.`plazo_cliente` TO `empleado`@`%`;
 GRANT SELECT, INSERT ON `banco`.`caja_ahorro` TO `empleado`@`%`;
+GRANT TRIGGER ON `banco`.* TO `empleado`@`%`;
 --
 CREATE USER IF NOT EXISTS 'atm'@'%' IDENTIFIED BY 'atm';
 
 GRANT SELECT, UPDATE ON `banco`.`tarjeta` TO `atm`@`%`;
 GRANT SELECT, SHOW VIEW ON `banco`.`trans_cajas_ahorro` TO `atm`@`%`;
 GRANT USAGE ON *.* TO `atm`@`%`;
+GRANT EXECUTE ON PROCEDURE `banco`.extraer TO 'atm'@'%';
+GRANT EXECUTE ON PROCEDURE `banco`.transferir TO 'atm'@'%';
+
 
 
 -- La exportación de datos fue deseleccionada.

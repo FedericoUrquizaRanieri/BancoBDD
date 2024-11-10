@@ -205,20 +205,20 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		if (this.tarjeta == null) {
 			throw new Exception("Hubo un error al recuperar la información sobre la tarjeta del cliente.");
 		}
-
-		/**
-		 * TODO Deberá extraer de la cuenta del cliente el monto especificado (ya validado) y 
-		 * 		obtener el saldo de la cuenta como resultado.
-		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 		 * 		
-		 */		
-		
+		consulta("CALL extraer("+this.tarjeta+","+monto+",@A)");
+		ResultSet rs=consulta("SELECT @A");
+		if(rs.next()){
+			if(rs.getInt("@A")==1){
+				throw new Exception("Error: saldo insuficiente");
+			}
+		}
 		String resultado = ModeloATM.EXTRACCION_EXITOSA;
 		
 		if (!resultado.equals(ModeloATM.EXTRACCION_EXITOSA)) {
 			throw new Exception(resultado);
 		}
 		return this.obtenerSaldo();
-
+		
 	}
 
 	
@@ -234,12 +234,12 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		int retorno = 0;
         ResultSet rs = null;
 		try {
-			rs = consulta("SELECT DISTINCT cod_caja FROM tarjeta WHERE nro_ca = "+p_cuenta);
+			rs = consulta("SELECT DISTINCT nro_ca FROM tarjeta WHERE nro_ca = "+p_cuenta);
 		} catch (Exception e) {
 			throw new SQLException(e.getMessage());
 		}
 		if(rs.next()){
-			retorno = rs.getInt("cod_caja");
+			retorno = rs.getInt("nro_ca");
 		}else{
 			throw new Exception("No existe una cuenta bajo estas caracteristicas");
 		}
@@ -267,6 +267,16 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			throw new Exception("Hubo un error al recuperar la información sobre la tarjeta del cliente.");
 		}
 
+		consulta("CALL transferir("+this.tarjeta+","+cajaDestino+","+monto+","+this.codigoATM+",@B)");
+		ResultSet rs=consulta("SELECT @B");
+		if(rs.next()){
+			if(rs.getInt("@B")==1){
+				throw new Exception("Error: saldo insuficiente");
+			}
+			if(rs.getInt("@B")==2){
+				throw new Exception("Error: destino inexistente");
+			}
+		}
 		
 		/**
 		 * TODO Deberá extraer de la cuenta del cliente el monto especificado (ya fue validado) y
