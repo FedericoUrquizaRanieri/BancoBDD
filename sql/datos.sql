@@ -201,7 +201,8 @@ DELETE FROM `empleado`;
 INSERT INTO `empleado` (`legajo`, `apellido`, `nombre`, `tipo_doc`, `nro_doc`, `direccion`, `telefono`, `cargo`, `password`, `nro_suc`) VALUES
 	(120000, 'Federico', 'Gonzalez', 'Pasaporte', 34567, 'Brown 1000', '291323101', 'Gerente', 'contrasena', 1),
 	(130000, 'Pérez', 'Juan', 'DNI', 44889900, 'Brown 1000', '291323100', 'Gerente', '123456789', 1),
-	(140000, 'Gómez', 'Ana', 'DNI', 43100200, 'Colombia 1000', '291800900', 'Cajero', 'CARP912', 2);
+	(140000, 'Gómez', 'Ana', 'DNI', 43100200, 'Colombia 1000', '291800900', 'Cajero', 'CARP912', 2),
+  (110000, 'Pistarini', 'Edmundo', 42634897, 'Alsina 523', '2915349983', 'Analista', '123' ,2);
 
 -- Volcando estructura para tabla banco.extraccion
 CREATE TABLE IF NOT EXISTS `extraccion` (
