@@ -36,7 +36,8 @@ INSERT INTO `atm` (`cod_caja`, `cod_postal`, `direccion`) VALUES
 	(10, 8000, 'Dir ATM 10-BB'),
 	(11, 8000, 'Dir ATM 11-BB'),
 	(12, 1000, 'Dir ATM 12-BA'),
-	(13, 2000, 'Dir ATM 13-MDP');
+	(13, 2000, 'Dir ATM 13-MDP'),
+  (100, 8000, 'Dir ATM 100-BB');
 
 -- Volcando estructura para tabla banco.caja
 CREATE TABLE IF NOT EXISTS `caja` (
@@ -57,7 +58,8 @@ INSERT INTO `caja` (`cod_caja`) VALUES
 	(10),
 	(11),
 	(12),
-	(13);
+	(13),
+  (100);
 
 -- Volcando estructura para tabla banco.caja_ahorro
 CREATE TABLE IF NOT EXISTS `caja_ahorro` (
