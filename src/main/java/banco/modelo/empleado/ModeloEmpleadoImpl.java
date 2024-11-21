@@ -50,7 +50,7 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
         }
 		ResultSet rs=null;
 		try {
-			rs=consulta("SELECT legajo,password FROM empleado WHERE legajo = "+legajoInt+" AND password=MD5("+password+")");
+			rs=consulta("SELECT legajo,password FROM empleado WHERE legajo = "+legajoInt+" AND password=MD5('"+password+"')");
 		} catch (Exception e) {
 			throw new SQLException(e.getMessage());
 		}

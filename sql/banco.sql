@@ -344,29 +344,31 @@ DELIMITER ;
 
 DELIMITER %%%
 
-CREATE PROCEDURE extraer(IN tar INT, IN monto DECIMAL(10,2), OUT resultado INT)
+CREATE PROCEDURE extraer(IN tar INT, IN monto DECIMAL(10,2),IN cod INT, OUT resultado INT)
 BEGIN
-  DECLARE sald DECIMAL(10,2);
-  DECLARE cod INT;
-  DECLARE cliente INT;
+  	DECLARE sald DECIMAL(10,2);
+  	DECLARE caj INT;
+  	DECLARE cli INT;
+  	
+  	START TRANSACTION;
 
-  SELECT nro_ca INTO cod FROM tarjeta WHERE nro_tarjeta=tar;
-  SELECT nro_cliente INTO cliente FROM tarjeta WHERE nro_tarjeta=tar;
-  SELECT saldo INTO sald FROM trans_cajas_ahorro AS tr JOIN tarjeta AS t ON t.nro_ca = tr.nro_ca WHERE t.nro_tarjeta=tar ORDER BY fecha DESC LIMIT 1;
-  START TRANSACTION;
-   	IF sald < monto THEN
-   		SET resultado = 1;
-   	ELSE 
-		  INSERT INTO `transaccion` (`nro_trans`, `fecha`, `hora`, `monto`) VALUES
+  	SELECT nro_ca INTO caj FROM tarjeta WHERE nro_tarjeta=tar;
+  	SELECT nro_cliente INTO cli FROM tarjeta WHERE nro_tarjeta=tar;
+  	SELECT saldo INTO sald FROM caja_ahorro AS c JOIN tarjeta AS t ON t.nro_ca = c.nro_ca WHERE t.nro_tarjeta=tar FOR UPDATE;
+  
+	IF sald < monto THEN
+   	SET resultado = 1;
+   ELSE 
+		INSERT INTO `transaccion` (`nro_trans`, `fecha`, `hora`, `monto`) VALUES
 			(NULL, CURDATE(), CURTIME(), monto);
   		INSERT INTO `transaccion_por_caja` (`nro_trans`, `cod_caja`) VALUES
 			(LAST_INSERT_ID(), cod);
-		  INSERT INTO `extraccion` (`nro_trans`, `nro_ca`, `nro_cliente`) VALUES
-			(LAST_INSERT_ID(), cod, cliente);
-		  UPDATE `caja_ahorro` SET saldo = sald - monto WHERE nro_ca=cod;
-		  SET resultado=0;
-		END IF;
-	COMMIT;
+		INSERT INTO `extraccion` (`nro_trans`, `nro_ca`, `nro_cliente`) VALUES
+			(LAST_INSERT_ID(), caj, cli);
+		UPDATE `caja_ahorro` SET saldo = sald - monto WHERE nro_ca=caj;
+		SET resultado=0;
+	END IF;
+  COMMIT;
 END %%%
 
 DELIMITER ;
@@ -377,17 +379,17 @@ DELIMITER %%%
 
 CREATE PROCEDURE transferir(IN tarjeta_origen INT, IN cliente_destino INT,IN monto DECIMAL(10,2), IN nro_atm INT, OUT resultado INT)
 BEGIN
-   DECLARE cliente_origen INT;
-   DECLARE nro_cliente_origen INT;
-   DECLARE origen_saldo DECIMAL(10,2);
-   DECLARE existe INT;
+  DECLARE cliente_origen INT;
+  DECLARE nro_cliente_origen INT;
+  DECLARE origen_saldo DECIMAL(10,2);
+  DECLARE existe INT;
+
+  START TRANSACTION;
    
-   SELECT nro_ca INTO cliente_origen FROM tarjeta WHERE nro_tarjeta = tarjeta_origen;
-   SELECT nro_cliente INTO nro_cliente_origen FROM tarjeta WHERE nro_tarjeta = tarjeta_origen;
-   SELECT saldo INTO origen_saldo FROM trans_cajas_ahorro AS tr JOIN tarjeta AS t ON t.nro_ca = tr.nro_ca WHERE t.nro_tarjeta=tarjeta_origen ORDER BY fecha DESC LIMIT 1;
-   SELECT COUNT(nro_ca) INTO existe FROM tarjeta WHERE nro_ca = cliente_destino;
-   
-	START TRANSACTION;
+  SELECT nro_ca INTO cliente_origen FROM tarjeta WHERE nro_tarjeta = tarjeta_origen;
+  SELECT nro_cliente INTO nro_cliente_origen FROM tarjeta WHERE nro_tarjeta = tarjeta_origen;
+  SELECT saldo INTO origen_saldo FROM caja_ahorro AS c JOIN tarjeta AS t ON t.nro_ca = c.nro_ca WHERE t.nro_tarjeta=tarjeta_origen FOR UPDATE;
+  SELECT COUNT(nro_ca) INTO existe FROM tarjeta WHERE nro_ca = cliente_destino;
 	
 	IF existe != 0 AND origen_saldo >= monto THEN
 		INSERT INTO transaccion(nro_trans, fecha, hora, monto)
@@ -401,6 +403,16 @@ BEGIN
 
    	INSERT INTO transferencia(nro_trans, nro_cliente, origen, destino)
    	VALUES (LAST_INSERT_ID(), nro_cliente_origen, cliente_origen, cliente_destino);
+
+    INSERT INTO transaccion(nro_trans, fecha, hora, monto)
+   	VALUES (NULL, CURDATE(), CURTIME(), monto);
+
+   	INSERT INTO transaccion_por_caja(nro_trans, cod_caja)
+   	VALUES (LAST_INSERT_ID(), nro_atm);
+
+    INSERT INTO deposito(nro_trans, nro_ca)
+   	VALUES (LAST_INSERT_ID(), cliente_destino);
+
    	SET resultado = 0; -- Operacion exitosa
 	ELSEIF existe = 0 THEN
    	SET resultado = 2;	-- Error destino inexistente
@@ -408,7 +420,7 @@ BEGIN
       SET resultado = 1;	-- Error saldo insuficiente
    END IF;
 
-   COMMIT;
+  COMMIT;
 END %%%
 
 DELIMITER ;

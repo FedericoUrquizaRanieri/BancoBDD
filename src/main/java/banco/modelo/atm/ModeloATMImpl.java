@@ -205,7 +205,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		if (this.tarjeta == null) {
 			throw new Exception("Hubo un error al recuperar la información sobre la tarjeta del cliente.");
 		}
-		consulta("CALL extraer("+this.tarjeta+","+monto+",@A)");
+		consulta("CALL extraer("+this.tarjeta+","+monto+","+codigoATM+",@A)");
 		ResultSet rs=consulta("SELECT @A");
 		if(rs.next()){
 			if(rs.getInt("@A")==1){
