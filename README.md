@@ -1,9 +1,9 @@
--This is a copy of the project made in collaboration with my teammates and professors. 
--Each contributor is properly credited in the commit history. 
--The project was made for Bases De Datos course at Universidad Nacional del Sur.
--The project was about a Database made by my team with an empty skeleton presented by the professors
--Later the app was partially implemented by my team with the other half created by the professors
--Under this is the original README
+This is a copy of the project made in collaboration with my teammates and professors. 
+Each contributor is properly credited in the commit history. 
+The project was made for Bases De Datos course at Universidad Nacional del Sur.
+The project was about a Database made by my team with an empty skeleton presented by the professors
+Later the app was partially implemented by my team with the other half created by the professors
+Under this is the original README
 
 
 # Banco
